@@ -1,0 +1,38 @@
+.ReactModal__Overlay {
+	background-color: rgba(5, 2, 6, 0.90) !important;
+}
+
+.ReactModal__Content {
+	width: 590px;
+	height: 360px;
+	border-radius: 8px !important;
+	margin: auto auto;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	transition: ease-in 0.4s;
+
+	> img {
+		margin-bottom: 24px;
+	}
+
+	h2 {
+		font-family: 'Poppins';
+		font-size: 24px;
+		font-weight: 700;
+		margin-bottom: 12px;
+	}
+
+	 > p {
+		 color: #737380;
+		 margin-bottom: 40px;
+	}
+
+	> div {
+		display: flex;
+		flex-direction: row;
+		gap: 8px;
+	}
+}

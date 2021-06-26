@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import {useHistory, useParams} from 'react-router-dom';
+import Modal from 'react-modal';
 
 import logoImg from '../assets/images/logo.svg';
 import deleteImg from '../assets/images/delete.svg';
 import checkImg from '../assets/images/check.svg';
 import answerImg from '../assets/images/answer.svg';
+import excluideImg from '../assets/images/exclude.svg';
+import deleteRedImg from '../assets/images/delete-red.svg';
 
 import {Button} from "../components/Button";
 import {RoomCode} from "../components/RoomCode";
@@ -13,6 +17,7 @@ import { useRoom } from '../hooks/useRoom';
 import { database } from '../services/firebase';
 
 import "../styles/room.scss";
+import "../styles/modal.scss";
 
 type RoomParams = {
 	id: string;
@@ -25,6 +30,17 @@ export function AdminRoom() {
 	const roomId = params.id;
 
 	const {title, questions} = useRoom(roomId);
+	const [modalIsOpen, setModalIsOpen] = useState(false);
+	const [questionId, setQuestionId] = useState<string | undefined>('');
+
+	function openModal(deleteQuestionId?: string) {
+		setModalIsOpen(true);
+		setQuestionId(deleteQuestionId);
+	}
+
+	function closeModal() {
+		setModalIsOpen(false);
+	}
 
 	async function handleEndRoom() {
 		database.ref(`rooms/${roomId}`).update({
@@ -34,10 +50,9 @@ export function AdminRoom() {
 		history.push('/');
 	}
 
-	async function handleDeleteQuestion(questionId: string) {
-		if (window.confirm('Tem certeza que deseja excluir essa pergunta?')) {
-			await database.ref(`rooms/${roomId}/questions/${questionId}`).remove();
-		}
+	async function handleDeleteQuestion(questionId?: string) {
+		await database.ref(`rooms/${roomId}/questions/${questionId}`).remove();
+		closeModal();
 	}
 
 	async function handleCheckQuestionAsAnswered(questionId: string) {
@@ -59,7 +74,7 @@ export function AdminRoom() {
 					<img src={logoImg} alt="Letmeask" />
 					<div>
 						<RoomCode code={roomId}/>
-						<Button isOutlined onClick={handleEndRoom}>Encerrar sala</Button>
+						<Button isOutlined onClick={() => openModal()}>Encerrar sala</Button>
 					</div>
 				</div>
 			</header>
@@ -70,6 +85,44 @@ export function AdminRoom() {
 					{ questions.length > 0 && <span>{questions.length} pergunta(s)</span>}
 				</div>
 
+				<Modal
+					isOpen={modalIsOpen}
+					contentLabel="end room"
+					onRequestClose={closeModal}
+					ariaHideApp={false}
+				>
+					{!questionId ? (
+						<>
+							<img src={excluideImg} alt="exclude room alert" />
+							<h2>Encerrar sala</h2>
+							<p>Tem certeza que você deseja encerrar esta sala ?</p>
+							<div>
+								<Button 
+									onClick={closeModal} 
+									style={{backgroundColor: '#DBDCDD', color: '#737380'}}
+								>
+									Cancelar
+								</Button>
+								<Button isExclud onClick={() => handleEndRoom()}>Sim, encerrar</Button>
+							</div>
+						</>
+					) : (
+						<>
+							<img src={deleteRedImg} alt="delete question alert" />
+							<h2>Excluir pergunta</h2>
+							<p>Tem certeza que você deseja excluir esta pergunta ?</p>
+							<div>
+								<Button 
+									onClick={closeModal} 
+									style={{backgroundColor: '#DBDCDD', color: '#737380'}}
+								>
+									Cancelar
+								</Button>
+								<Button isExclud onClick={() => handleDeleteQuestion(questionId)}>Sim, excluir</Button>
+							</div>
+						</>
+					)}
+				</Modal>
 				<div className="question-list">
 					{questions.map(question => {
 						return (
@@ -98,7 +151,7 @@ export function AdminRoom() {
 								)}
 								<button
 									type="button"
-									onClick={() => handleDeleteQuestion(question.id)}
+									onClick={() => openModal(question.id)}
 								>
 									<img src={deleteImg} alt="remover pergunta" />
 								</button>
